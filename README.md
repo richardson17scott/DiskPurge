@@ -40,13 +40,13 @@ Following the rules of the CS50P automated grader framework, the application's m
 
 To run the software application locally or inside a virtual cloud container:
 1. Initialize package assets via pip dependencies:
-   Bash
+   
    pip install -r requirements.txt
 
 2. Execute the primary controller file to begin storage tracking:
-    Bash
+    
     python project.py
 
 3. Run the automated verification test suites:
-    Bash
+    
     pytest test_project.py
