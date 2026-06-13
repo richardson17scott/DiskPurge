@@ -23,6 +23,10 @@ class DiskPurgeGUI(ctk.CTk):
 
         self.title("DiskPurge - Storage Analyzer")
         self.geometry("750x620")
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(current_dir, "app_icon.ico")
+        self.iconbitmap(icon_path)
         
         # Inject true black into the main window window
         self.configure(fg_color=BG_PITCH_BLACK)
