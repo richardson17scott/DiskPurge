@@ -2,73 +2,116 @@ import os
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 
-# Import your original backend functions from your analyzer package
 from analyzer.core import directory_scanner, largest_files
 
-# Set the overall look and feel
+# --- GLOSSY MODERN STYLING CONFIGURATION ---
 ctk.set_appearance_mode("Dark")
-ctk.set_default_color_theme("blue")
+
+# Premium Cyber-Gloss Palette
+BG_PITCH_BLACK = "#000000"      # True black backdrop
+PANEL_GLOSS_DARK = "#0B0B0E"    # Deep obsidian glass panel
+BORDER_GLOSS_SLATE = "#1F2937"  # Metallic/slate subtle border outline
+ACCENT_ELECTRIC_BLUE = "#00D2FF"# High-tech glowing neon blue
+BUTTON_SCAN_BLUE = "#0052D4"    # Deep glossy sapphire blue
+BUTTON_SCAN_HOVER = "#4364F7"   # Glowing hover state
+BUTTON_DELETE_RED = "#8A2387"   # Deep metallic magenta/red 
+BUTTON_DELETE_HOVER = "#E94057" # Vibrant ruby hover
 
 class DiskPurgeGUI(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        # Configure window
         self.title("DiskPurge - Storage Analyzer")
-        self.geometry("700x550") # Made slightly taller for the new stat label
-        self.selected_path = ""
+        self.geometry("750x620")
+        
+        # Inject true black into the main window window
+        self.configure(fg_color=BG_PITCH_BLACK)
+        
+        self.file_checkboxes = {} 
+        self.scanned_files_list = []
 
         # --- UI ELEMENTS ---
         
-        # 1. Title Banner
-        self.title_label = ctk.CTkLabel(self, text="💾 DISKPURGE DASHBOARD", font=ctk.CTkFont(size=22, weight="bold"))
+        # 1. Title Banner (Neon Glow effect using font weight and accent colors)
+        self.title_label = ctk.CTkLabel(
+            self, 
+            text="💾  DiskPurge", 
+            font=ctk.CTkFont(family="Segoe UI", size=24, weight="bold"),
+            text_color=ACCENT_ELECTRIC_BLUE
+        )
         self.title_label.pack(pady=20)
 
-        # 2. Folder Selection Frame
-        self.selection_frame = ctk.CTkFrame(self)
-        self.selection_frame.pack(pady=10, fill="x", padx=20)
+        # 2. Folder Selection Frame (Glossy Panel with Slate Border)
+        self.selection_frame = ctk.CTkFrame(
+            self, fg_color=PANEL_GLOSS_DARK, border_color=BORDER_GLOSS_SLATE, border_width=1
+        )
+        self.selection_frame.pack(pady=8, fill="x", padx=25)
 
-        self.path_entry = ctk.CTkEntry(self.selection_frame, placeholder_text="No folder selected...", width=450)
-        self.path_entry.pack(side="left", padx=10, pady=10)
+        self.path_entry = ctk.CTkEntry(
+            self.selection_frame, placeholder_text="No folder selected...", 
+            width=480, fg_color="#16161D", border_color=BORDER_GLOSS_SLATE, text_color="#FFFFFF"
+        )
+        self.path_entry.pack(side="left", padx=15, pady=15)
 
-        self.browse_btn = ctk.CTkButton(self.selection_frame, text="Browse", command=self.browse_folder, width=100)
-        self.browse_btn.pack(side="right", padx=10, pady=10)
+        self.browse_btn = ctk.CTkButton(
+            self.selection_frame, text="Browse", command=self.browse_folder, 
+            width=110, fg_color="#1F2937", hover_color="#374151", border_color=BORDER_GLOSS_SLATE, border_width=1
+        )
+        self.browse_btn.pack(side="right", padx=15, pady=15)
 
         # 3. Scan Settings Frame
-        self.settings_frame = ctk.CTkFrame(self)
-        self.settings_frame.pack(pady=10, fill="x", padx=20)
-        
-        self.limit_label = ctk.CTkLabel(self.settings_frame, text="Show top X largest files:")
-        self.limit_label.pack(side="left", padx=10, pady=10)
-        
-        self.limit_entry = ctk.CTkEntry(self.settings_frame, width=60)
-        self.limit_entry.insert(0, "10") 
-        self.limit_entry.pack(side="left", padx=5, pady=10)
-
-        # 4. Action Button
-        self.scan_btn = ctk.CTkButton(self, text="START SCAN", fg_color="#D35400", hover_color="#E67E22", command=self.start_scan)
-        self.scan_btn.pack(pady=15)
-
-        # ⭐ NEW FEATURE: Total Storage Display Label
-        self.stats_label = ctk.CTkLabel(
-            self, 
-            text="Total Storage Used: --", 
-            font=ctk.CTkFont(size=15, weight="bold"),
-            text_color="#3498DB" # Nice bright blue accent color
+        self.settings_frame = ctk.CTkFrame(
+            self, fg_color=PANEL_GLOSS_DARK, border_color=BORDER_GLOSS_SLATE, border_width=1
         )
-        self.stats_label.pack(pady=5)
+        self.settings_frame.pack(pady=8, fill="x", padx=25)
+        
+        self.limit_label = ctk.CTkLabel(self.settings_frame, text="Show top X largest files:", text_color="#A0AEC0")
+        self.limit_label.pack(side="left", padx=15, pady=12)
+        
+        self.limit_entry = ctk.CTkEntry(
+            self.settings_frame, width=70, fg_color="#16161D", border_color=BORDER_GLOSS_SLATE, text_color="#FFFFFF"
+        )
+        self.limit_entry.insert(0, "10") 
+        self.limit_entry.pack(side="left", padx=5, pady=12)
 
-        # 5. Results Box
-        self.results_box = ctk.CTkTextbox(self, width=660, height=220, font=ctk.CTkFont(family="Courier", size=12))
-        self.results_box.pack(pady=10, padx=20)
-        self.results_box.insert("0.0", "Select a folder and click 'START SCAN' to view details...")
+        # 4. Control Buttons Frame
+        self.button_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.button_frame.pack(pady=15)
 
-    # --- BUTTON FUNCTIONS ---
+        self.scan_btn = ctk.CTkButton(
+            self.button_frame, text="START SCAN", 
+            fg_color=BUTTON_SCAN_BLUE, hover_color=BUTTON_SCAN_HOVER,
+            font=ctk.CTkFont(size=13, weight="bold"), width=150, height=38
+        )
+        self.scan_btn.configure(command=self.start_scan)
+        self.scan_btn.pack(side="left", padx=12)
+
+        self.purge_btn = ctk.CTkButton(
+            self.button_frame, text="DELETE SELECTED", 
+            fg_color=BUTTON_DELETE_RED, hover_color=BUTTON_DELETE_HOVER,
+            font=ctk.CTkFont(size=13, weight="bold"), width=150, height=38
+        )
+
+        # 5. Storage Tracker Info
+        self.stats_label = ctk.CTkLabel(
+            self, text="Total Storage Used: --", 
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"), 
+            text_color="#A0AEC0"
+        )
+        self.stats_label.pack(pady=8)
+
+        # 6. Scrollable Container Frame (True Obsidian Look)
+        self.results_frame = ctk.CTkScrollableFrame(
+            self, width=680, height=260, 
+            fg_color=PANEL_GLOSS_DARK, border_color=BORDER_GLOSS_SLATE, border_width=1
+        )
+        self.results_frame.pack(pady=10, padx=25, fill="both", expand=True)
+
+    # --- CORE FUNCTIONS ---
 
     def browse_folder(self):
         directory = filedialog.askdirectory()
         if directory:
-            self.selected_path = directory
             self.path_entry.delete(0, ctk.END)
             self.path_entry.insert(0, directory)
 
@@ -85,51 +128,81 @@ class DiskPurgeGUI(ctk.CTk):
             messagebox.showerror("Error", "Please enter a valid number for the file limit.")
             return
 
-        # UI Reset
-        self.results_box.delete("1.0", ctk.END)
-        self.results_box.insert(ctk.END, f"Scanning: {target_dir}...\n\n")
-        self.stats_label.configure(text="Total Storage Used: Calculating...")
+        for widget in self.results_frame.winfo_children():
+            widget.destroy()
+        self.file_checkboxes.clear()
+        self.purge_btn.pack_forget()
+
+        self.stats_label.configure(text="Total Storage Used: Calculating...", text_color=ACCENT_ELECTRIC_BLUE)
         self.update_idletasks() 
 
         try:
-            # Consume your generator to analyze files
-            all_files = list(directory_scanner(target_dir)) 
+            self.scanned_files_list = list(directory_scanner(target_dir)) 
+            total_bytes = sum(size for _, size in self.scanned_files_list)
             
-            # ⭐ CALCULATE TOTAL SIZE
-            # Sums up the size of every file object caught in the directory scan
-            total_bytes = sum(size for _, size in all_files)
-            
-            # Convert total bytes to human-readable text
             if total_bytes > 1024**3:
                 total_str = f"{total_bytes / (1024**3):.2f} GB"
             else:
                 total_str = f"{total_bytes / (1024**2):.2f} MB"
             
-            # Update our brand new label dynamically!
-            self.stats_label.configure(text=f"Total Storage Used: {total_str}")
+            self.stats_label.configure(text=f"Total Storage Used: {total_str}", text_color=ACCENT_ELECTRIC_BLUE)
 
-            # Grab top heavy-hitters using your original function
-            top_files = largest_files(all_files, limit)
+            top_files = largest_files(self.scanned_files_list, limit)
 
             if not top_files:
-                self.results_box.insert(ctk.END, "No files found inside the selected directory.")
+                no_files_lbl = ctk.CTkLabel(self.results_frame, text="No heavy files found inside this directory.", text_color="#718096")
+                no_files_lbl.pack(pady=20)
                 return
 
-            # Print layout inside the custom text box
-            self.results_box.insert(ctk.END, f"{'FILE PATH':<50} | {'SIZE'}\n")
-            self.results_box.insert(ctk.END, "-" * 65 + "\n")
-            
             for file_path, size_bytes in top_files:
                 if size_bytes > 1024**3:
-                    file_size_str = f"{size_bytes / (1024**3):.2f} GB"
+                    file_size_str = f"[{size_bytes / (1024**3):.2f} GB]"
                 else:
-                    file_size_str = f"{size_bytes / (1024**2):.2f} MB"
-                    
-                self.results_box.insert(ctk.END, f"{file_path:<50} | {file_size_str}\n")
+                    file_size_str = f"[{size_bytes / (1024**2):.2f} MB]"
+
+                display_text = f"  {file_size_str:<12}  {file_path}"
+                
+                chk_var = ctk.StringVar(value="off")
+                
+                # Checkbox tailored to match modern sleek look
+                cb = ctk.CTkCheckBox(
+                    self.results_frame, text=display_text, variable=chk_var, 
+                    onvalue="on", offvalue="off",
+                    font=ctk.CTkFont(family="Segoe UI", size=13),
+                    text_color="#E2E8F0", 
+                    fg_color=BUTTON_SCAN_BLUE,       # This colors the box when checked!
+                    hover_color=ACCENT_ELECTRIC_BLUE
+                )
+                cb.pack(anchor="w", pady=8, padx=15)
+                
+                self.file_checkboxes[file_path] = chk_var
+
+            self.purge_btn.pack(side="left", padx=12)
 
         except Exception as e:
             messagebox.showerror("Scan Failure", f"An error occurred: {str(e)}")
-            self.stats_label.configure(text="Total Storage Used: Error")
+            self.stats_label.configure(text="Total Storage Used: Error", text_color="#E53E3E")
+
+    def delete_selected_files(self):
+        targets_to_delete = [path for path, var in self.file_checkboxes.items() if var.get() == "on"]
+
+        if not targets_to_delete:
+            messagebox.showinfo("Attention", "No targets selected. Check some boxes first!")
+            return
+
+        confirm = messagebox.askyesno("Confirm Destruction", f"Are you sure you want to permanently delete these {len(targets_to_delete)} files?\nThis action cannot be undone.")
+        
+        if confirm:
+            deleted_count = 0
+            for file_path in targets_to_delete:
+                try:
+                    os.remove(file_path)
+                    deleted_count += 1
+                except Exception as e:
+                    messagebox.showerror("Error Removing File", f"Could not remove:\n{file_path}\nError: {e}")
+            
+            messagebox.showinfo("Success", f"Successfully expunged {deleted_count} files from your system.")
+            self.start_scan()
 
 if __name__ == "__main__":
     app = DiskPurgeGUI()
