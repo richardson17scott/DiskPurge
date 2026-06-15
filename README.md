@@ -1,11 +1,11 @@
-# DiskPurge - Storage Analyzer
+# DiskPurge - Command LineStorage Analyzer
 
 #### Video URL: https://youtu.be/MnEj69c3DB8
 
 #### Description:
 **DiskPurge** is a lightweight, command-line storage profile engine written in Python. It is designed to recursively crawl complex file systems, identify storage-hogging files, aggregate space utilization metrics by file extensions, and provide an interactive terminal interface for safe data cleanup.
 
-The primary motivation behind DiskPurge was to create a functional alternative to storage analysis applications, optimized entirely to analyze large directories in both CLI-mode (for tech bros) and GUI-mode.
+The primary motivation behind DiskPurge was to create a functional alternative to storage analysis applications, optimized entirely to analyze large directories in CLI-mode.
 ---
 
 ### Architectural Design Choices
@@ -45,10 +45,6 @@ To run the software application locally or inside a virtual cloud container:
 2.1 Execute the primary controller file to begin storage tracking in CLI-mode:
     
     python project.py
-
-2.2 Execute the primary controller file to begin storage tracking in GUI-mode:
-
-    python gui.py
 
 3. Run the automated verification test suites:
     

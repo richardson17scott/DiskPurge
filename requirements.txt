@@ -1,4 +1,4 @@
 tabulate
 pyfiglet
 pytest
-customtkinter
+
