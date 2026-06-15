@@ -1,4 +1,4 @@
-# DiskPurge - Command Line Storage Analyzer
+# DiskPurge - Storage Analyzer
 
 #### Video URL: https://youtu.be/MnEj69c3DB8
 
